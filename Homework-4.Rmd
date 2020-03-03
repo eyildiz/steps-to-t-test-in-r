@@ -1,0 +1,107 @@
+---
+title: "İki Bilgi Güvenliği Farkındalık Sınavı Sonucunun İstatistiki Olarak Karşılaştırılması "
+author: "Ersin YILDIZ / 19324814019"
+date: "3/3/2020"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Giriş
+
+ISO 27001 Bilgi Güvenliği Yönetim Sistemi sahibi olan firmaların senede bir defa tüm çalışanlarına **Bilgi Güvenliği Farkındalık Eğitimi** verme zorunluluğu vardır. Bu dönemde eğitim öncesinde ve eğitim sonrasında birer sınav yapılmaktadır. Bu çalışmada eğitim öncesinde alınan puanlarla eğitim sonrasında alınan puanların arasında anlamlı bir fark var mıdır sorusuna istatistiki olarak yanıt aranmaktadır. Bir diğer deyişle, alınmış olan eğitim faydalı olmuş mudur sorusuna istatistikten faydalanarak yanıt verilmesi istenmektedir. 
+
+Elimizdeki veri, **30** öğrencinin eğitimden önceki sınavdan aldığı puanlarını ve eğitimden sonra aldığı puanları içermektedir.
+
+## 2. Verilerin Okunması
+
+Çalışmaya başlamadan önce, veriler iki sütunlu bir excel dosyasından okunup R-markdown dosyasında kullanılmak üzere .rda dosyası olarak kaydedilmiştir.
+Kaydedilmiş .rda dosyası okunarak işleme başlanmıştır. 
+
+```{r}
+sinav_sonuclari<-readRDS("bgysfarkindalik.rda")
+attach(sinav_sonuclari)
+sinav_sonuclari
+```
+
+## 3. Normal Dağılım Kontrolleri
+
+Veriler ile ilgili T-Testi yapmadan önce verilerin normal dağılıp dağılmadığı test edilmelidir. 
+
+### 3.1 Eğitim Öncesi Sınav Notları İçin Normal Dağılım Kontrolü
+
+onceki_sinav isimli veriler için normal dağılım kontrolü gerçekleştirirken kurulan hipotezler :  
+**H~0~ **: Histogramın ideal normal dağılım eğrisi ile verinin dağılım eğrisi *aynıdır.*   
+**H~A~ **: Histogramın ideal normal dağılım eğrisi ile verinin dağılım eğrisi *farklıdır.*   
+
+Bu hipotezler shapiro testi ile kontrol edilmektedir. Shapiro testin sonucu ve ideal dağılım grafiği şu şekilde hesaplanır.
+
+```{r}
+library(rcompanion)
+plotNormalHistogram(onceki_sinav, main="İdeal Normal Dağılım - onceki_sinav")
+shapiro.test(onceki_sinav)
+```
+
+Görüldüğü üzere onceki_sinav verisi için shapiro testinde p-value 0.05'in altında çıkmıştır. Yani hull hipotez reddedilmiştir. Alterntif hipotez kabul edilmiştir. **Özetle eğitim öncesi girilen sınavdan alınan notlar normal dağılmamıştır.**  
+
+### 3.2 Eğitim Sonrası Sınav Notları İçin Normal Dağılım Kontrolü
+
+sonraki_sinav isimli veriler için normal dağılım kontrolü gerçekleştirirken kurulan hipotezler :  
+**H~0~ **: Histogramın ideal normal dağılım eğrisi ile verinin dağılım eğrisi *aynıdır.*   
+**H~A~ **: Histogramın ideal normal dağılım eğrisi ile verinin dağılım eğrisi *farklıdır.*   
+
+Bu hipotezler shapiro testi ile kontrol edilmektedir. Shapiro testin sonucu ve ideal dağılım grafiği şu şekilde hesaplanır.
+
+```{r}
+plotNormalHistogram(sonraki_sinav, main="İdeal Normal Dağılım - sonraki_sinav")
+shapiro.test(sonraki_sinav)
+```
+
+Shapiro testinin sonucunda p-value 0.05'ten büyük bir değer çıkmıştır. Dolayısıyla **H~0~ ** (Null Hipotez) kabul edilmiştir. Eğitim sonrası yapılan sınavdan alınan notlar **normal dağılmıştır.**
+
+Sonuç olarak *onceki_sinav* normal dağılmazken *sonraki_sinav* verisi normal dağılmıştır. Normal dağılmayan veri için **normalleştirme** deneyerek devam edilir.
+
+## 4. Normalleştirme
+
+Veri normalleştirilirken en uygun lambda değeri Tukey Transform fonksiyonu kullanılarak bulunmuştur. 
+
+```{r}
+normal_onceki_sinav<-transformTukey(onceki_sinav)
+normal_onceki_sinav
+```
+
+Tukey Transformdan aldığımız sonuca göre -0.075 lambda değeri için p-value 0.05'ten büyük olabilmektedir. Yani bu lambda değeri ile normalizasyon yapıldığında veri normal dağılım göstermektedir. Lambda değerimiz <0 olduğu için sonraki_sinav verisi için şu dönüşüm işlemi yapılacaktır:   
+`if (lambda <  0){TRANS = -1 * x ^ lambda}`
+
+```{r}
+lambda<-(-0.075)
+normal_sonraki_sinav<-(-1)*(sonraki_sinav^lambda)
+normal_sonraki_sinav
+```
+sonraki_sinav verileri de normalleştirildikten sonra her iki normalize edilmiş veri için shapiro testi yaparak p-value değerleri kontrol edilir. Bu testler için yine hipotezleri vermek gerekirse :  
+**H~0~ **: Histogramın ideal normal dağılım eğrisi ile verinin dağılım eğrisi *aynıdır.*   
+**H~A~ **: Histogramın ideal normal dağılım eğrisi ile verinin dağılım eğrisi *farklıdır.*   
+```{r}
+shapiro.test(normal_onceki_sinav)
+shapiro.test(normal_sonraki_sinav)
+```
+
+Test sonucunda elde edilen p-value'lara bakarak her iki test için de null hipotezin kabul edildiği, yani verilerin normal dağıldığı görülebilir.   
+Normal dağılan bu iki veriseti için T testi yapmadan önce **varyans kontrolü** yapılmalıdır.
+
+
+## 5. Varyans Kontrolü
+
+Verilerin normal dağılmasının yanında varyanslarının da eşit olması T testi için gereklidir. Varyans testi yaparken hipotezlerimiz şöyle kurulur:  
+**H~0~ **: Test edilen iki veri setinin varyansları *eşittir.*  
+**H~A~ **: Test edilen iki veri setinin varyansları *eşit değildir.*  
+
+```{r}
+var.test(normal_onceki_sinav,normal_sonraki_sinav)
+```
+
+## 6. Sonuç
+Varyans testinin sonucunda p-value değeri (0.02107) 0.05 değerinden küçük çıkmıştır. Bunun yanında varyansların birbirine oranı 2.4 çıkmıştır ki bu değer de oranların 2'den küçük olma şartını sağlamamktadır. p-value değerine bakılarak null hipotez reddedilir. Verilerin varyansları **eşit değildir.** ***Varyansları eşit olmayan veriler için t testi yapılamaz.***
