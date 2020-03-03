@@ -1,6 +1,6 @@
 ---
 title: "İki Bilgi Güvenliği Farkındalık Sınavı Sonucunun İstatistiki Olarak Karşılaştırılması "
-author: "Ersin YILDIZ / 19324814019"
+author: "Ersin YILDIZ  - Akıllı Sistemler Mühendisliği"
 date: "3/3/2020"
 output:
   html_document: default
@@ -105,3 +105,6 @@ var.test(normal_onceki_sinav,normal_sonraki_sinav)
 
 ## 6. Sonuç
 Varyans testinin sonucunda p-value değeri (0.02107) 0.05 değerinden küçük çıkmıştır. Bunun yanında varyansların birbirine oranı 2.4 çıkmıştır ki bu değer de oranların 2'den küçük olma şartını sağlamamktadır. p-value değerine bakılarak null hipotez reddedilir. Verilerin varyansları **eşit değildir.** ***Varyansları eşit olmayan veriler için t testi yapılamaz.***
+
+> Not : Bu RMarkdown dosyasının ve HTML çıktısının dijital haline aşağıdaki bağlantıdan erişebilirsiniz.
+<https://github.com/eyildiz/steps-to-t-test-in-r>
